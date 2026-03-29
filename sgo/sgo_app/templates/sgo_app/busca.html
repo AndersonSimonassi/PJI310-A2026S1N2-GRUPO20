@@ -1,0 +1,86 @@
+{% extends 'sgo_app/base.html' %}
+
+{% block content %}
+<h2>Consultar Reparos</h2>
+<form method="get" class="search-form">
+    <div class="form-group">
+        <input type="text" name="query" value="{{ query }}" 
+               placeholder="Buscar por ID, Marca, Modelo ou Serial" 
+               class="search-input">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </div>
+</form>
+
+{% if equipments %}
+    <div class="equipment-list">
+        {% for equipment in equipments %}
+        <div class="equipment-card">
+            <div class="equipment-header">
+                <h3>Equipamento #{{ equipment.id }}</h3>
+                <div class="header-actions">
+                    <span class="status-badge {% if equipment.exit_date %}status-completed{% else %}status-in-progress{% endif %}">
+                        {% if equipment.exit_date %}
+                            Finalizado
+                        {% else %}
+                            Em Reparo
+                        {% endif %}
+                    </span>
+                    <a href="{% url 'delete' equipment.id %}" class="btn btn-danger btn-sm">Excluir</a>
+                </div>
+            </div>
+            
+            <div class="equipment-details">
+                <div class="detail-row">
+                    <div class="detail-group">
+                        <label>Marca:</label>
+                        <span>{{ equipment.get_brand_display }}</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>Modelo:</label>
+                        <span>{{ equipment.model }}</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>Tipo:</label>
+                        <span>{{ equipment.get_equipment_type_display }}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-group">
+                        <label>Número Serial:</label>
+                        <span>{{ equipment.serial_number }}</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>Data de Entrada:</label>
+                        <span>{{ equipment.entry_date }}</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>Data de Saída:</label>
+                        <span>{{ equipment.exit_date|default:"Em aberto" }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <label>Descrição do Defeito:</label>
+                    <div class="detail-text">{{ equipment.defect_description }}</div>
+                </div>
+
+                <div class="detail-section">
+                    <label>Reparo Efetuado:</label>
+                    <div class="detail-text">{{ equipment.repair_description }}</div>
+                </div>
+
+                {% if equipment.observations %}
+                <div class="detail-section">
+                    <label>Observações:</label>
+                    <div class="detail-text">{{ equipment.observations }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% elif query %}
+    <p class="no-results">Nenhum equipamento encontrado !.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'sgo_app/base.html' %}
+
+{% block content %}
+<h2>Cadastro de equipamentos</h2>
+
+{% if success %}
+<div class="success-message">
+    <p>Equipamento cadastrado com sucesso!</p>
+    <p>Código do equipamento: <strong>{{ equipment_id }}</strong></p>
+    <p>Você pode usar esse código para localizar o equipamento na consulta.</p>
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label>Descrição:</label>
+            {{ form.description }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Marca:</label>
+            {{ form.brand }}
+        </div>
+        <div class="form-group">
+            <label>Modelo:</label>
+            {{ form.model }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Número de série:</label>
+            {{ form.serial_number }}
+        </div>
+        <div class="form-group">
+            <label>Tipo:</label>
+            {{ form.equipment_type }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Data de entrada:</label>
+            {{ form.entry_date }}
+        </div>
+        <div class="form-group">
+            <label>Data de saída:</label>
+            {{ form.exit_date }}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Descrição do defeito:</label>
+        {{ form.defect_description }}
+    </div>
+
+    <div class="form-group">
+        <label>Descrição do reparo:</label>
+        {{ form.repair_description }}
+    </div>
+
+    <div class="form-group">
+        <label>Observações:</label>
+        {{ form.observations }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cadastrar</button>
+</form>
+{% endblock %}
