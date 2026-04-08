@@ -11,6 +11,11 @@ class ClienteForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Digite o nome completo do cliente'
             }),
+            'cep': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: 00000-000',
+                'id': 'id_cep'
+            }),
             'endereco': forms.Textarea(attrs={
                 'rows': 3, 
                 'class': 'form-control',
