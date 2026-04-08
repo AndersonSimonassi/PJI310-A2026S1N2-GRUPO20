@@ -1,0 +1,139 @@
+{% extends 'sgo_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header bg-light text-secondary border-bottom">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>{{ title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">
+                                <i class="fas fa-user me-2"></i>Nome completo
+                            </label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}
+                                <div class="text-danger mt-1">{{ form.nome.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.telefone.id_for_label }}" class="form-label">
+                                <i class="fas fa-phone me-2"></i>Telefone
+                            </label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}
+                                <div class="text-danger mt-1">{{ form.telefone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.cep.id_for_label }}" class="form-label">
+                                <i class="fas fa-location-arrow me-2"></i>CEP
+                            </label>
+                            <div class="input-group">
+                                {{ form.cep }}
+                                <button class="btn btn-outline-secondary" type="button" id="btn-buscar-cep">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                            <small class="text-muted">Apenas números. O endereço será preenchido automaticamente.</small>
+                            {% if form.cep.errors %}
+                                <div class="text-danger mt-1">{{ form.cep.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.endereco.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>Endereço Completo
+                            </label>
+                            {{ form.endereco }}
+                            {% if form.endereco.errors %}
+                                <div class="text-danger mt-1">{{ form.endereco.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'cliente_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputCep = document.getElementById('id_cep');
+        const inputEndereco = document.querySelector('textarea[name="endereco"]');
+        const btnBuscarCep = document.getElementById('btn-buscar-cep');
+
+        function buscarCep() {
+            let cep = inputCep.value.replace(/\D/g, '');
+            if (cep !== "") {
+                const validacep = /^[0-9]{8}$/;
+                if(validacep.test(cep)) {
+                    // Feedback visual
+                    inputEndereco.value = "Buscando endereço...";
+                    inputCep.disabled = true;
+                    btnBuscarCep.disabled = true;
+                    const textoOriginalBotao = btnBuscarCep.innerHTML;
+                    btnBuscarCep.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+                    
+                    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                        .then(response => response.json())
+                        .then(dados => {
+                            if (!dados.erro) {
+                                inputEndereco.value = `${dados.logradouro}, \nBairro: ${dados.bairro} \nCidade: ${dados.localidade} - ${dados.uf}`;
+                            } else {
+                                inputEndereco.value = "";
+                                alert("CEP não encontrado.");
+                            }
+                        })
+                        .catch(error => {
+                            inputEndereco.value = "";
+                            alert("Erro ao buscar o CEP.");
+                            console.error('Erro na requisição ViaCEP:', error);
+                        })
+                        .finally(() => {
+                            // Restaura o estado original
+                            inputCep.disabled = false;
+                            btnBuscarCep.disabled = false;
+                            btnBuscarCep.innerHTML = textoOriginalBotao;
+                            inputEndereco.focus();
+                        });
+                } else {
+                    alert("Formato de CEP inválido.");
+                }
+            }
+        }
+
+        inputCep.addEventListener('blur', buscarCep);
+        btnBuscarCep.addEventListener('click', buscarCep);
+        
+        // Máscara simples para o CEP
+        inputCep.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if(value.length > 8) value = value.slice(0, 8);
+            if(value.length > 5) {
+                value = value.slice(0, 5) + '-' + value.slice(5);
+            }
+            e.target.value = value;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'sgo_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar exclusão
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning me-2"></i>
+                        <strong>Atenção!</strong> Tem certeza que deseja excluir este {{ object_name|lower }}? Esta ação não pode ser desfeita.
+                    </div>
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ object }}</h5>
+                            {% if object_name == 'Cliente' %}
+                                <p class="card-text">
+                                    <strong>Telefone:</strong> {{ object.telefone }}<br>
+                                    <strong>Endereço:</strong> {{ object.endereco|truncatechars:100 }}
+                                </p>
+                            {% elif object_name == 'Técnico' %}
+                                <p class="card-text">
+                                    <strong>Nome:</strong> {{ object.nome }}
+                                </p>
+                            {% elif object_name == 'Equipamento' %}
+                                <p class="card-text">
+                                    <strong>Cliente:</strong> {{ object.id_cliente.nome }}<br>
+                                    <strong>Tipo:</strong> {{ object.get_tipo_display }}<br>
+                                    <strong>Marca:</strong> {{ object.get_marca_display }}<br>
+                                    <strong>Modelo:</strong> {{ object.modelo }}<br>
+                                    <strong>Número de série:</strong> {{ object.numero_serial }}
+                                </p>
+                            {% elif object_name == 'Reparo' %}
+                                <p class="card-text">
+                                    <strong>Equipamento:</strong> {{ object.id_equipamento }}<br>
+                                    <strong>Técnico:</strong> {{ object.id_tecnico.nome }}<br>
+                                    <strong>Data de entrada:</strong> {{ object.data_entrada|date:"d/m/Y" }}<br>
+                                    <strong>Valor do reparo:</strong> R$ {{ object.custo_reparo|floatformat:2 }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="javascript:history.back()" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>Sim, Excluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,123 @@
+{% extends 'sgo_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center bg-white p-3 border rounded shadow-sm">
+                <h1 class="h3 mb-0 text-secondary">
+                    <i class="fas fa-chart-pie me-2"></i>Dashboard
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faturamento -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body py-4 text-center">
+                    <h5 class="card-title text-opacity-75 text-white mb-2"><i class="fas fa-money-bill-wave me-2"></i>Faturamento Total</h5>
+                    <h2 class="display-4 fw-bold mb-0">R$ {{ faturamento_total|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100 border-secondary-subtle shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 text-secondary"><i class="fas fa-desktop me-2"></i>Equipamentos por Tipo</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="tiposChart" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card h-100 border-secondary-subtle shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 text-secondary"><i class="fas fa-tags me-2"></i>Equipamentos por Marca</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="marcasChart" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tiposLabels = JSON.parse('{{ tipos_labels|safe }}');
+        const tiposData = JSON.parse('{{ tipos_data|safe }}');
+        const marcasLabels = JSON.parse('{{ marcas_labels|safe }}');
+        const marcasData = JSON.parse('{{ marcas_data|safe }}');
+
+        const bgColors = [
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(108, 117, 125, 0.7)',
+            'rgba(23, 162, 184, 0.7)',
+            'rgba(40, 167, 69, 0.7)',
+        ];
+        
+        const borderColors = bgColors.map(color => color.replace('0.7', '1'));
+
+        const ctxTipos = document.getElementById('tiposChart').getContext('2d');
+        new Chart(ctxTipos, {
+            type: 'bar',
+            data: {
+                labels: tiposLabels,
+                datasets: [{
+                    label: 'Quantidade',
+                    data: tiposData,
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        const ctxMarcas = document.getElementById('marcasChart').getContext('2d');
+        new Chart(ctxMarcas, {
+            type: 'doughnut',
+            data: {
+                labels: marcasLabels,
+                datasets: [{
+                    data: marcasData,
+                    backgroundColor: bgColors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
