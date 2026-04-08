@@ -1,6 +1,5 @@
-"""Views: autenticação, cadastros e geração de relatório em PDF."""
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Q
+rom django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q, Count, Sum
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -38,6 +37,35 @@ def home(request):
         'reparos_count': Reparo.objects.count(),
     }
     return render(request, 'sgo_app/home.html', context)
+
+@login_required
+def dashboard(request):
+    from .models import Equipamento, Reparo
+    
+    # Equipamentos por tipo
+    tipos_qs = Equipamento.objects.values('tipo').annotate(total=Count('id_equipamento'))
+    tipo_choices = dict(Equipamento.TYPE_CHOICES)
+    tipos_labels = [tipo_choices.get(item['tipo'], item['tipo']) for item in tipos_qs]
+    tipos_data = [item['total'] for item in tipos_qs]
+
+    # Equipamentos por marca
+    marcas_qs = Equipamento.objects.values('marca').annotate(total=Count('id_equipamento'))
+    marca_choices = dict(Equipamento.BRAND_CHOICES)
+    marcas_labels = [marca_choices.get(item['marca'], item['marca']) for item in marcas_qs]
+    marcas_data = [item['total'] for item in marcas_qs]
+
+    # Faturamento total
+    faturamento_aggr = Reparo.objects.aggregate(total=Sum('custo_reparo'))
+    faturamento = faturamento_aggr['total'] or 0.00
+    
+    context = {
+        'tipos_labels': json.dumps(tipos_labels),
+        'tipos_data': json.dumps(tipos_data),
+        'marcas_labels': json.dumps(marcas_labels),
+        'marcas_data': json.dumps(marcas_data),
+        'faturamento_total': faturamento,
+    }
+    return render(request, 'sgo_app/dashboard.html', context)
 
 # --- Clientes ---
 @login_required
@@ -206,144 +234,204 @@ def gerar_relatorio_pdf(request, reparo_id):
     
     try:
         from reportlab.lib.pagesizes import A4
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib.units import inch
+        from reportlab.lib.units import inch, cm
         from reportlab.lib import colors
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
         from io import BytesIO
         from datetime import datetime
         
         # Memória para o arquivo PDF
         buffer = BytesIO()
         
-        # Documento ReportLab (página A4)
-        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        # Documento ReportLab (página A4) com margens reduzidas para mais aproveitamento de espaço
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
         
-        # Estilos de parágrafo
+        # Estilos customizados da nova identidade visual
         styles = getSampleStyleSheet()
+        
+        primary_color = colors.HexColor('#1E3A8A')    # Azul escuro elegante
+        secondary_color = colors.HexColor('#3B82F6')  # Azul primary do tailwind
+        bg_light = colors.HexColor('#F8FAFC')
+        text_dark = colors.HexColor('#1E293B')
+        text_muted = colors.HexColor('#64748B')
+        
         title_style = ParagraphStyle(
-            'CustomTitle',
+            'PremiumTitle',
             parent=styles['Heading1'],
-            fontSize=18,
-            spaceAfter=30,
+            fontName='Helvetica-Bold',
+            fontSize=24,
+            spaceAfter=10,
             alignment=TA_CENTER,
-            textColor=colors.HexColor('#334155')
+            textColor=primary_color
         )
         
-        heading_style = ParagraphStyle(
-            'CustomHeading',
+        subtitle_style = ParagraphStyle(
+            'PremiumSubtitle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=11,
+            alignment=TA_CENTER,
+            textColor=text_muted,
+            spaceAfter=30
+        )
+        
+        section_style = ParagraphStyle(
+            'SectionTitle',
             parent=styles['Heading2'],
+            fontName='Helvetica-Bold',
             fontSize=14,
-            spaceAfter=12,
-            textColor=colors.HexColor('#334155')
+            spaceBefore=15,
+            spaceAfter=10,
+            textColor=primary_color,
+            borderPadding=(0, 0, 4, 0)
         )
         
         normal_style = ParagraphStyle(
-            'CustomNormal',
+            'PremiumNormal',
             parent=styles['Normal'],
-            fontSize=10,
-            spaceAfter=6
+            fontName='Helvetica',
+            fontSize=11,
+            textColor=text_dark,
+            leading=14,
+            alignment=TA_JUSTIFY,
+            spaceAfter=8
         )
         
-        # Conteúdo do relatório (lista de fluxo)
+        bold_style = ParagraphStyle(
+            'PremiumBold',
+            parent=normal_style,
+            fontName='Helvetica-Bold'
+        )
+        
         story = []
         
-        # Cabeçalho
-        story.append(Paragraph("RELATÓRIO DE REPARO", title_style))
-        story.append(Paragraph("SGO — Sistema de Gestão de Oficina", styles['Normal']))
-        story.append(Spacer(1, 20))
+        # Cabeçalho - Título
+        story.append(Paragraph("LAUDO TÉCNICO DE REPARO", title_style))
+        story.append(Paragraph("SGO — Sistema Avançado de Gestão de Oficina", subtitle_style))
+        story.append(HRFlowable(width="100%", thickness=2, color=primary_color, spaceAfter=20))
         
-        # Dados do reparo
-        story.append(Paragraph("INFORMAÇÕES DO REPARO", heading_style))
-        
-        reparo_data = [
-            ['Código do reparo:', str(reparo.id_reparo)],
-            ['Data de Entrada:', reparo.data_entrada.strftime('%d/%m/%Y')],
-            ['Data de Saída:', reparo.data_saida.strftime('%d/%m/%Y') if reparo.data_saida else 'Em andamento'],
-            ['Técnico Responsável:', reparo.id_tecnico.nome],
+        # --- Seção 1: Dados Gerais ---
+        story.append(Paragraph("1. DADOS DO REPARO", section_style))
+        dados_reparo = [
+            [Paragraph("<b>OS:</b>", normal_style), Paragraph(f"#{reparo.id_reparo:05d}", normal_style),
+             Paragraph("<b>Técnico:</b>", normal_style), Paragraph(f"{reparo.id_tecnico.nome}", normal_style)],
+            [Paragraph("<b>Entrada:</b>", normal_style), Paragraph(f"{reparo.data_entrada.strftime('%d/%m/%Y')}", normal_style),
+             Paragraph("<b>Saída:</b>", normal_style), Paragraph(f"{reparo.data_saida.strftime('%d/%m/%Y') if reparo.data_saida else 'Em Andamento'}", normal_style)]
         ]
         
-        reparo_table = Table(reparo_data, colWidths=[2*inch, 4*inch])
-        reparo_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f9fa')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        t1 = Table(dados_reparo, colWidths=[1*inch, 2.7*inch, 1*inch, 2.7*inch])
+        t1.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), bg_light),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.white),
+            ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#E2E8F0')),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ]))
+        story.append(t1)
+        story.append(Spacer(1, 5))
         
-        story.append(reparo_table)
-        story.append(Spacer(1, 20))
+        # --- Seção 2: Dados do Equipamento e Cliente ---
+        story.append(Paragraph("2. INFORMAÇÕES DO CLIENTE E EQUIPAMENTO", section_style))
         
-        # Dados do equipamento e do cliente
-        story.append(Paragraph("INFORMAÇÕES DO EQUIPAMENTO", heading_style))
+        cliente_endereco = reparo.id_equipamento.id_cliente.endereco
+        cep_cliente = reparo.id_equipamento.id_cliente.cep
+        endereco_fmt = f"{cliente_endereco}" + (f" - CEP: {cep_cliente}" if cep_cliente else "")
         
-        equipamento_data = [
-            ['Cliente:', reparo.id_equipamento.id_cliente.nome],
-            ['Telefone:', reparo.id_equipamento.id_cliente.telefone],
-            ['Tipo:', reparo.id_equipamento.get_tipo_display()],
-            ['Marca:', reparo.id_equipamento.get_marca_display()],
-            ['Modelo:', reparo.id_equipamento.modelo],
-            ['Número de série:', reparo.id_equipamento.numero_serial],
-            ['Endereço:', reparo.id_equipamento.id_cliente.endereco],
+        dados_equip = [
+            [Paragraph("<b>Cliente:</b>", normal_style), Paragraph(f"{reparo.id_equipamento.id_cliente.nome}", normal_style)],
+            [Paragraph("<b>Contato:</b>", normal_style), Paragraph(f"{reparo.id_equipamento.id_cliente.telefone}", normal_style)],
+            [Paragraph("<b>Endereço:</b>", normal_style), Paragraph(endereco_fmt, normal_style)],
+            [Paragraph("<b>Aparelho:</b>", normal_style), Paragraph(f"{reparo.id_equipamento.get_tipo_display()} {reparo.id_equipamento.get_marca_display()} {reparo.id_equipamento.modelo}", normal_style)],
+            [Paragraph("<b>Nº de Série:</b>", normal_style), Paragraph(f"{reparo.id_equipamento.numero_serial}", normal_style)],
         ]
         
-        equipamento_table = Table(equipamento_data, colWidths=[2*inch, 4*inch])
-        equipamento_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f9fa')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        t2 = Table(dados_equip, colWidths=[1.8*inch, 5.6*inch])
+        t2.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (0,-1), bg_light),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
         ]))
+        story.append(t2)
+        story.append(Spacer(1, 5))
         
-        story.append(equipamento_table)
-        story.append(Spacer(1, 20))
+        # --- Seção 3: Parecer Técnico ---
+        story.append(Paragraph("3. DIAGNÓSTICO E SERVIÇOS", section_style))
         
-        # Defeito relatado
-        story.append(Paragraph("DESCRIÇÃO DO DEFEITO", heading_style))
+        story.append(Paragraph("<b>Defeito Relatado:</b>", bold_style))
         story.append(Paragraph(reparo.descricao_defeito, normal_style))
-        story.append(Spacer(1, 15))
+        story.append(Spacer(1, 5))
         
-        # Serviço realizado
-        story.append(Paragraph("DESCRIÇÃO DO REPARO", heading_style))
+        story.append(Paragraph("<b>Serviço Executado:</b>", bold_style))
         story.append(Paragraph(reparo.descricao_reparo, normal_style))
-        story.append(Spacer(1, 15))
+        story.append(Spacer(1, 5))
         
-        # Peças substituídas
         if reparo.pecas_substituidas:
-            story.append(Paragraph("PEÇAS SUBSTITUÍDAS", heading_style))
+            story.append(Paragraph("<b>Peças Trocadas:</b>", bold_style))
             story.append(Paragraph(reparo.pecas_substituidas, normal_style))
-            story.append(Spacer(1, 15))
+            story.append(Spacer(1, 5))
+            
+        story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#E2E8F0'), spaceBefore=10, spaceAfter=15))
         
-        # Valor do reparo
-        story.append(Paragraph("CUSTO TOTAL DO REPARO", heading_style))
-        custo_style = ParagraphStyle(
-            'CustoStyle',
-            parent=styles['Normal'],
+        # --- Seção 4: Valores ---
+        story.append(Spacer(1, 15))
+        valor_style = ParagraphStyle(
+            'ValorStyle',
+            parent=styles['Heading2'],
+            fontName='Helvetica-Bold',
             fontSize=16,
-            textColor=colors.HexColor('#2e7d32'),
-            alignment=TA_CENTER
+            textColor=colors.HexColor('#047857'),
+            alignment=TA_RIGHT
         )
-        story.append(Paragraph(f"R$ {reparo.custo_reparo:.2f}", custo_style))
-        story.append(Spacer(1, 30))
         
-        # Data e hora de geração
-        story.append(Paragraph(f"Relatório gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M')}", 
-                              ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER)))
+        dados_valor = [
+            [Paragraph("CUSTO TOTAL DO REPARO:", ParagraphStyle('Sub', parent=valor_style, textColor=text_dark, fontSize=12, alignment=TA_RIGHT)), 
+             Paragraph(f"R$ {reparo.custo_reparo:,.2f}".replace('.',','), valor_style)]
+        ]
+        t3 = Table(dados_valor, colWidths=[5.4*inch, 2*inch])
+        t3.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#D1FAE5')), # Verde bem clarinho
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('ALIGN', (1,0), (1,0), 'RIGHT'),
+            ('TOPPADDING', (0,0), (-1,-1), 10),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+            ('LEFTPADDING', (0,0), (-1,-1), 10),
+            ('RIGHTPADDING', (0,0), (-1,-1), 10),
+            ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#34D399')),
+        ]))
+        story.append(t3)
+        story.append(Spacer(1, 40))
         
-        # Monta o PDF no buffer
+        # Assinatura
+        sig_data = [
+            [HRFlowable(width="80%", thickness=1, color=colors.black)],
+            [Paragraph("Assinatura do Cliente", ParagraphStyle('sig', parent=styles['Normal'], alignment=TA_CENTER, fontSize=9))]
+        ]
+        t_sig = Table(sig_data, colWidths=[4*inch])
+        t_sig.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER')]))
+        story.append(t_sig)
+        
+        # Rodapé com data
+        story.append(Spacer(1, 15))
+        rodape = Paragraph(f"Emissão local: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}", 
+                           ParagraphStyle('Rodape', parent=styles['Normal'], fontSize=8, textColor=text_muted, alignment=TA_CENTER))
+        story.append(rodape)
+        
+        # Build do Doc
         doc.build(story)
         
-        # Resposta HTTP com anexo
         buffer.seek(0)
         response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="relatorio_reparo_{reparo_id}.pdf"'
+        response['Content-Disposition'] = f'inline; filename="os_{reparo_id:05d}_SGO.pdf"'
         
         return response
         
