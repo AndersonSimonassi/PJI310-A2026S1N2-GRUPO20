@@ -4,6 +4,7 @@ from django.db import models
 class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
     nome = models.CharField('Nome', max_length=200)
+    cep = models.CharField('CEP', max_length=15, blank=True, null=True)
     endereco = models.TextField('Endereço')
     telefone = models.CharField('Telefone', max_length=20)
 
