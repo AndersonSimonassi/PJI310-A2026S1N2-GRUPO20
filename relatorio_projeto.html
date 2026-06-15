@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório do Projeto SGO - Sistema de Gestão de Oficina</title>
+    <style>
+        @page {
+            margin: 2cm;
+            size: A4;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+            font-size: 11pt;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1E3A8A;
+        }
+        
+        header h1 {
+            color: #1E3A8A;
+            font-size: 28pt;
+            margin-bottom: 10px;
+        }
+        
+        header .subtitle {
+            color: #666;
+            font-size: 14pt;
+        }
+        
+        header .version {
+            background: #D1FAE5;
+            color: #065F46;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10pt;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
+            border: 1px solid #34D399;
+        }
+        
+        header .meta {
+            margin-top: 15px;
+            font-size: 10pt;
+            color: #888;
+        }
+        
+        h2 {
+            color: #1E3A8A;
+            font-size: 18pt;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E2E8F0;
+        }
+        
+        h3 {
+            color: #2C3844;
+            font-size: 14pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        table th {
+            background-color: #1E3A8A;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #F8FAFC;
+        }
+        
+        .code-block {
+            background-color: #F1F5F9;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .info-box {
+            background-color: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 12px 15px;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        .warning-box {
+            background-color: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 12px 15px;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        .success-box {
+            background-color: #D1FAE5;
+            border-left: 4px solid #10B981;
+            padding: 12px 15px;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 5px;
+        }
+        
+        .diagram {
+            background-color: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        .status-table td:last-child {
+            font-weight: bold;
+        }
+        
+        .status-ok {
+            color: #10B981;
+        }
+        
+        .status-pending {
+            color: #F59E0B;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #E2E8F0;
+            text-align: center;
+            font-size: 9pt;
+            color: #888;
+        }
+        
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1E3A8A;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12pt;
+        }
+        
+        .print-btn:hover {
+            background: #2C3844;
+        }
+        
+        @media print {
+            .print-btn {
+                display: none;
+            }
+            
+            body {
+                font-size: 10pt;
+            }
+            
+            h2 {
+                page-break-after: avoid;
+            }
+            
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    
+    <div class="container">
+    <header>
+        <div class="version">v1.1 — Migração PostgreSQL/Supabase Concluída ✅</div>
+        <h1>SGO — Sistema de Gestão de Oficina</h1>
+        <div class="subtitle">Relatório Detalhado do Projeto</div>
+        <div class="meta">
+            <strong>Data:</strong> 06 de maio de 2026<br>
+            <strong>Projeto:</strong> PJI310-A2026S1N2-GRUPO20<br>
+            <strong>Repositório:</strong> https://github.com/marco7apolo/PJI310-A2026S1N2-GRUPO20<br>
+            <strong>Tecnologias:</strong> Django 6.0.5, Python 3.14, PostgreSQL/Supabase, HTML/CSS, JavaScript, Bootstrap 5<br>
+            <strong>Status:</strong> ✅ Totalmente Funcional (Cadastros, Dashboard, PDF, Autenticação)
+        </div>
+    </header>
+
+        <h2>1. Visão Geral</h2>
+        <p>O <strong>SGO (Sistema de Gestão de Oficina)</strong> é uma aplicação web desenvolvida em Django para gerenciar oficinas de reparo de eletroeletrônicos. O sistema atende à demanda de pequenos empreendimentos do setor, muitos atuando na informalidade, oferecendo ferramentas para cadastro de clientes, equipamentos, técnicos e ordens de serviço (reparos), além de dashboards e geração de laudos técnicos em PDF.</p>
+        
+        <h3>Contexto</h3>
+        <ul>
+            <li>O Brasil é o 5º maior produtor de lixo eletrônico do mundo (~62 milhões de toneladas em 2022).</li>
+            <li>Apenas ~3% dos resíduos eletrônicos são reciclados.</li>
+            <li>Cerca de 37,5% da população ocupada no Brasil está na informalidade.</li>
+            <li>O sistema utiliza metodologias centradas no usuário (Design Thinking).</li>
+        </ul>
+
+        <h2>2. Estrutura de Diretórios</h2>
+        <div class="code-block">PJI310-A2026S1N2-GRUPO20/
+├── sgo/                    # Configurações principais do Django (projeto)
+│   ├── settings.py         # Configurações: banco, apps, idioma, fuso
+│   ├── urls.py             # Rotas principais do projeto
+│   ├── wsgi.py             # Interface WSGI para deploy
+│   └── asgi.py             # Interface ASGI (opcional)
+├── sgo_app/                # Aplicação principal
+│   ├── models.py           # Modelos: Cliente, Tecnico, Equipamento, Reparo
+│   ├── views.py            # Lógica das páginas e rotas
+│   ├── forms.py            # Formulários Django (Forms)
+│   ├── admin.py            # Configuração do admin do Django
+│   ├── migrations/         # Migrações do banco de dados
+│   └── templates/sgo_app/  # Arquivos HTML (Bootstrap 5)
+│       ├── base.html        # Layout base com navbar
+│       ├── home.html        # Página inicial com resumo
+│       ├── dashboard.html   # Gráficos (Chart.js)
+│       ├── cliente_*.html   # CRUD de clientes
+│       ├── tecnico_*.html   # CRUD de técnicos
+│       ├── equipamento_*.html # CRUD de equipamentos
+│       ├── reparo_*.html    # CRUD de reparos + PDF
+│       └── login.html       # Autenticação
+├── manage.py               # Utilitário de linha de comando do Django
+└── README.md               # Descrição do projeto</div>
+
+        <h2>3. Configurações do Projeto</h2>
+        <h3>3.1 Parâmetros Principais (settings.py)</h3>
+        <table>
+            <tr>
+                <th>Parâmetro</th>
+                <th>Valor Atual</th>
+            </tr>
+            <tr>
+                <td>SECRET_KEY</td>
+                <td>Definida via DJANGO_SECRET_KEY ou padrão inseguro</td>
+            </tr>
+            <tr>
+                <td>DEBUG</td>
+                <td>True (via env DJANGO_DEBUG)</td>
+            </tr>
+            <tr>
+                <td>ALLOWED_HOSTS</td>
+                <td>localhost, 127.0.0.1</td>
+            </tr>
+            <tr>
+                <td>LANGUAGE_CODE</td>
+                <td>pt-br</td>
+            </tr>
+            <tr>
+                <td>TIME_ZONE</td>
+                <td>America/Sao_Paulo</td>
+            </tr>
+            <tr>
+                <td>USE_TZ</td>
+                <td>True</td>
+            </tr>
+        </table>
+
+        <h3>3.2 Banco de Dados Atual (MySQL)</h3>
+        <div class="code-block">DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bd_sgo',
+        'USER': 'pi_1_26_user',
+        'PASSWORD': 'PASSWORD_REMOVIDA',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}</div>
+        <div class="warning-box">
+            <strong>Nota:</strong> O projeto foi configurado inicialmente para MySQL, mas será migrado para PostgreSQL (Supabase) conforme planejado.
+        </div>
+
+        <h2>4. Modelos de Dados</h2>
+        <p>O sistema possui <strong>4 modelos principais</strong> com relacionamentos bem definidos:</p>
+
+        <h3>4.1 Cliente (Tabela: reparo_cliente)</h3>
+        <table>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>id_cliente</td>
+                <td>AutoField (PK)</td>
+                <td>Identificador único</td>
+            </tr>
+            <tr>
+                <td>nome</td>
+                <td>CharField(200)</td>
+                <td>Nome completo do cliente</td>
+            </tr>
+            <tr>
+                <td>cep</td>
+                <td>CharField(15)</td>
+                <td>CEP (opcional)</td>
+            </tr>
+            <tr>
+                <td>endereco</td>
+                <td>TextField</td>
+                <td>Endereço completo</td>
+            </tr>
+            <tr>
+                <td>telefone</td>
+                <td>CharField(20)</td>
+                <td>Telefone de contato</td>
+            </tr>
+        </table>
+
+        <h3>4.2 Técnico (Tabela: reparo_tecnico)</h3>
+        <table>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>id_tecnico</td>
+                <td>AutoField (PK)</td>
+                <td>Identificador único</td>
+            </tr>
+            <tr>
+                <td>nome</td>
+                <td>CharField(200)</td>
+                <td>Nome do técnico</td>
+            </tr>
+        </table>
+
+        <h3>4.3 Equipamento (Tabela: reparo_equipamento)</h3>
+        <table>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>id_equipamento</td>
+                <td>AutoField (PK)</td>
+                <td>Identificador único</td>
+            </tr>
+            <tr>
+                <td>id_cliente</td>
+                <td>FK(Cliente)</td>
+                <td>Cliente dono do equipamento</td>
+            </tr>
+            <tr>
+                <td>tipo</td>
+                <td>CharField (choices)</td>
+                <td>Celular, Tablet, Notebook, etc.</td>
+            </tr>
+            <tr>
+                <td>marca</td>
+                <td>CharField (choices)</td>
+                <td>Apple, Samsung, LG, etc.</td>
+            </tr>
+            <tr>
+                <td>modelo</td>
+                <td>CharField(100)</td>
+                <td>Modelo do aparelho</td>
+            </tr>
+            <tr>
+                <td>numero_serial</td>
+                <td>CharField(100)</td>
+                <td>Número de série</td>
+            </tr>
+        </table>
+        <p><strong>Tipos disponíveis:</strong> Celular, Tablet, Notebook, Câmera, Televisor, Aparelho de Som, Microondas, Outros.</p>
+        <p><strong>Marcas disponíveis:</strong> Apple, Samsung, LG, Sony, Motorola, Asus, Acer, Dell, HP, Lenovo, Outras marcas.</p>
+
+        <h3>4.4 Reparo - Ordem de Serviço (Tabela: reparo_reparo)</h3>
+        <table>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>id_reparo</td>
+                <td>AutoField (PK)</td>
+                <td>Identificador único</td>
+            </tr>
+            <tr>
+                <td>id_equipamento</td>
+                <td>FK(Equipamento)</td>
+                <td>Equipamento reparado</td>
+            </tr>
+            <tr>
+                <td>id_tecnico</td>
+                <td>FK(Tecnico)</td>
+                <td>Técnico responsável</td>
+            </tr>
+            <tr>
+                <td>data_entrada</td>
+                <td>DateField</td>
+                <td>Data de entrada do aparelho</td>
+            </tr>
+            <tr>
+                <td>data_saida</td>
+                <td>DateField (null)</td>
+                <td>Data de saída (opcional)</td>
+            </tr>
+            <tr>
+                <td>descricao_defeito</td>
+                <td>TextField</td>
+                <td>Descrição do problema</td>
+            </tr>
+            <tr>
+                <td>descricao_reparo</td>
+                <td>TextField</td>
+                <td>Serviço executado</td>
+            </tr>
+            <tr>
+                <td>pecas_substituidas</td>
+                <td>TextField</td>
+                <td>Peças trocadas (opcional)</td>
+            </tr>
+            <tr>
+                <td>custo_reparo</td>
+                <td>DecimalField(10,2)</td>
+                <td>Valor do reparo (padrão 0.00)</td>
+            </tr>
+        </table>
+
+        <h3>4.5 Diagrama de Relacionamentos</h3>
+        <div class="diagram">Cliente (1) ────> (N) Equipamento (1) ────> (N) Reparo (N) <──── (1) Tecnico</div>
+
+        <h2>5. Views e Rotas</h2>
+        <h3>5.1 Autenticação</h3>
+        <ul>
+            <li><strong>login_view</strong> — Tela de login com autenticação Django</li>
+            <li><strong>logout_view</strong> — Encerra sessão e redireciona para login</li>
+            <li>Todas as páginas protegidas com <code>@login_required</code></li>
+        </ul>
+
+        <h3>5.2 Páginas Principais</h3>
+        <table>
+            <tr>
+                <th>Rota</th>
+                <th>View</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>/</td>
+                <td>home</td>
+                <td>Dashboard resumido (contadores)</td>
+            </tr>
+            <tr>
+                <td>/dashboard/</td>
+                <td>dashboard</td>
+                <td>Gráficos de equipamentos e faturamento</td>
+            </tr>
+            <tr>
+                <td>/sobre/</td>
+                <td>about</td>
+                <td>Informações do projeto</td>
+            </tr>
+        </table>
+
+        <h3>5.3 Rotas CRUD (Clientes, Técnicos, Equipamentos, Reparos)</h3>
+        <p>Cada entidade possui 4 rotas padrão:</p>
+        <ul>
+            <li><code>/entidade/</code> — Lista todos</li>
+            <li><code>/entidade/novo/</code> — Cadastra novo</li>
+            <li><code>/entidade/editar/&lt;pk&gt;/</code> — Edita existente</li>
+            <li><code>/entidade/excluir/&lt;pk&gt;/</code> — Remove com confirmação</li>
+        </ul>
+        <p><strong>Reparo adicional:</strong> <code>/reparos/relatorio/&lt;id&gt;/</code> — Gera laudo em PDF</p>
+
+        <h2>6. Formulários</h2>
+        <p>Todos os formulários utilizam <code>django.forms.ModelForm</code> com widgets Bootstrap 5:</p>
+        <ul>
+            <li><strong>ClienteForm:</strong> nome, cep (id_cep para API), endereco, telefone</li>
+            <li><strong>TecnicoForm:</strong> nome</li>
+            <li><strong>EquipamentoForm:</strong> id_cliente (Select), tipo (Select), marca (Select), modelo, numero_serial</li>
+            <li><strong>ReparoForm:</strong> id_equipamento, id_tecnico, data_entrada, data_saida, descricao_defeito, descricao_reparo, pecas_substituidas, custo_reparo</li>
+        </ul>
+
+        <h2>7. Interface e Templates</h2>
+        <h3>7.1 Layout Base (base.html)</h3>
+        <ul>
+            <li>Navbar responsiva com Bootstrap 5</li>
+            <li>Dropdowns para Clientes, Técnicos, Equipamentos e Reparos</li>
+            <li>Exibe usuário logado e botão de sair</li>
+            <li>Mensagens de alerta (auto-fechamento em 5s)</li>
+            <li>Paleta de cores personalizada via CSS variables</li>
+        </ul>
+
+        <h3>7.2 Página Inicial (home.html)</h3>
+        <ul>
+            <li>Cards para cada entidade (Clientes, Técnicos, Equipamentos, Reparos)</li>
+            <li>Resumo numérico (contadores)</li>
+            <li>Botões "Ver todos" e "Novo registro"</li>
+        </ul>
+
+        <h3>7.3 Dashboard (dashboard.html)</h3>
+        <ul>
+            <li><strong>Faturamento Total</strong> em destaque (card verde)</li>
+            <li><strong>Gráfico de Barras:</strong> Equipamentos por Tipo (Chart.js)</li>
+            <li><strong>Gráfico de Rosca:</strong> Equipamentos por Marca (Chart.js)</li>
+        </ul>
+
+        <h3>7.4 Laudo em PDF (gerar_relatorio_pdf)</h3>
+        <div class="success-box">
+            <strong>Geração com ReportLab:</strong>
+            <ul>
+                <li>Cabeçalho "LAUDO TÉCNICO DE REPARO"</li>
+                <li>Seção 1: Dados do reparo (OS, técnico, datas)</li>
+                <li>Seção 2: Cliente e equipamento</li>
+                <li>Seção 3: Diagnóstico e serviços</li>
+                <li>Seção 4: Valor total do reparo</li>
+                <li>Assinatura do cliente e rodapé com data/hora</li>
+                <li>Fallback para HTML caso o PDF falhe</li>
+            </ul>
+        </div>
+
+        <h2>8. Dependências do Projeto</h2>
+        <div class="code-block">django>=5.2
+mysqlclient          # Driver MySQL (atual)
+# Para migração futura:
+psycopg2-binary      # Driver PostgreSQL (Supabase)
+reportlab            # Geração de PDF</div>
+        <div class="info-box">
+            <strong>Nota:</strong> Como não há <code>requirements.txt</code>, recomenda-se criar um com as dependências acima.
+        </div>
+
+        <h2>9. Plano de Migração para PostgreSQL (Supabase + Vercel)</h2>
+        <h3>Passos Planejados:</h3>
+        <ol>
+            <li><strong>Instalar driver PostgreSQL:</strong>
+                <div class="code-block">pip install psycopg2-binary</div>
+            </li>
+            <li><strong>Atualizar settings.py:</strong>
+                <div class="code-block">DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}</div>
+            </li>
+            <li><strong>Configurar variáveis no Vercel:</strong>
+                <ul>
+                    <li>DB_HOST (pooler do Supabase)</li>
+                    <li>DB_NAME, DB_USER, DB_PASSWORD</li>
+                    <li>DJANGO_SECRET_KEY, DJANGO_DEBUG=False</li>
+                </ul>
+            </li>
+            <li><strong>Executar migrações:</strong>
+                <div class="code-block">python manage.py makemigrations
+python manage.py migrate</div>
+            </li>
+            <li><strong>Deploy no Vercel</strong> com vercel.json configurado para Django.</li>
+        </ol>
+
+        <h2>10. Resumo das Funcionalidades</h2>
+        <table class="status-table">
+            <tr>
+                <th>Funcionalidade</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Cadastro de Clientes</td>
+                <td class="status-ok">✅ Implementado</td>
+            </tr>
+            <tr>
+                <td>Cadastro de Técnicos</td>
+                <td class="status-ok">✅ Implementado</td>
+            </tr>
+            <tr>
+                <td>Cadastro de Equipamentos</td>
+                <td class="status-ok">✅ Implementado</td>
+            </tr>
+            <tr>
+                <td>Ordens de Serviço (Reparos)</td>
+                <td class="status-ok">✅ Implementado</td>
+            </tr>
+            <tr>
+                <td>Autenticação de Usuários</td>
+                <td class="status-ok">✅ Implementado</td>
+            </tr>
+            <tr>
+                <td>Dashboard com Gráficos</td>
+                <td class="status-ok">✅ Implementado (Chart.js)</td>
+            </tr>
+            <tr>
+                <td>Laudo em PDF</td>
+                <td class="status-ok">✅ Implementado (ReportLab)</td>
+            </tr>
+            <tr>
+                <td>Banco MySQL</td>
+                <td class="status-ok">✅ Atual</td>
+            </tr>
+            <tr>
+                <td>Migração PostgreSQL</td>
+                <td class="status-pending">⏳ Planejado</td>
+            </tr>
+            <tr>
+                <td>Deploy no Vercel</td>
+                <td class="status-pending">⏳ Planejado</td>
+            </tr>
+        </table>
+
+        <h2>11. Atualizações da Versão v1.2 (Deploy Vercel Concluído)</h2>
+        
+        <h3>11.1 Alterações Realizadas</h3>
+        <table>
+            <tr>
+                <th>Arquivo</th>
+                <th>Alteração</th>
+            </tr>
+            <tr>
+                <td><code>requirements.txt</code></td>
+                <td>Removido <code>mysqlclient</code> (projeto usa PostgreSQL/Supabase)</td>
+            </tr>
+            <tr>
+                <td><code>vercel.json</code></td>
+                <td>Removido (Vercel auto-detecta Django)</td>
+            </tr>
+            <tr>
+                <td><code>build.sh</code></td>
+                <td>Removido (não necessário)</td>
+            </tr>
+            <tr>
+                <td><code>.python-version</code></td>
+                <td>Criado com <code>3.12</code> para Vercel</td>
+            </tr>
+            <tr>
+                <td><code>.env</code></td>
+                <td>Removido do rastreamento Git (segurança)</td>
+            </tr>
+            <tr>
+                <td><code>sgo/settings.py</code></td>
+                <td>Corrigido <code>ALLOWED_HOSTS</code> para wildcard <code>.vercel.app</code>; removido log de debug</td>
+            </tr>
+        </table>
+
+        <h3>11.2 Configuração do Vercel</h3>
+        <ul>
+            <li><strong>Projeto:</strong> <code>pji-310-a2026-s1-n2-grupo-20</code> (ou <code>sgo-pji</code>)</li>
+            <li><strong>Framework:</strong> Django (auto-detectado)</li>
+            <li><strong>Região:</strong> Washington, D.C., USA (East) – iad1</li>
+            <li><strong>Python Version:</strong> 3.12 (definido em <code>.python-version</code>)</li>
+            <li><strong>URL:</strong> <a href="https://sgo-pji.vercel.app">https://sgo-pji.vercel.app</a></li>
+        </ul>
+
+        <h3>11.3 Variáveis de Ambiente no Vercel (Transaction Pooler)</h3>
+        <table>
+            <tr>
+                <th>Nome</th>
+                <th>Valor</th>
+            </tr>
+            <tr>
+                <td><code>DJANGO_SECRET_KEY</code></td>
+                <td>(chave secreta)</td>
+            </tr>
+            <tr>
+                <td><code>DJANGO_DEBUG</code></td>
+                <td><code>False</code></td>
+            </tr>
+            <tr>
+                <td><code>DB_ENGINE</code></td>
+                <td><code>django.db.backends.postgresql</code></td>
+            </tr>
+            <tr>
+                <td><code>DB_NAME</code></td>
+                <td><code>postgres</code></td>
+            </tr>
+            <tr>
+                <td><code>DB_USER</code></td>
+                <td><code>postgres.evunltitxfjrreymbvbb</code></td>
+            </tr>
+            <tr>
+                <td><code>DB_PASSWORD</code></td>
+                <td>(senha do Supabase)</td>
+            </tr>
+            <tr>
+                <td><code>DB_HOST</code></td>
+                <td><code>aws-0-sa-east-1.pooler.supabase.com</code></td>
+            </tr>
+            <tr>
+                <td><code>DB_PORT</code></td>
+                <td><code>6543</code></td>
+            </tr>
+            <tr>
+                <td><code>DJANGO_ALLOWED_HOSTS</code></td>
+                <td><code>localhost,127.0.0.1,.vercel.app</code></td>
+            </tr>
+            <tr>
+                <td><code>DJANGO_SETTINGS_MODULE</code></td>
+                <td><code>sgo.settings</code></td>
+            </tr>
+        </table>
+
+        <h3>11.4 Solução de Problemas (Erro 500)</h3>
+        <div class="info-box">
+            <strong>Erro inicial:</strong> <code>Cannot assign requested address</code> (IPv6)<br>
+            <strong>Causa:</strong> Vercel tentando conexão IPv6 direta com Supabase<br>
+            <strong>Solução:</strong> Migração para <strong>Transaction Pooler</strong> (porta 6543) que resolve para IPv4<br>
+            <strong>Resultado:</strong> ✅ Conexão funcionando
+        </div>
+
+        <h3>11.5 Status do Deploy</h3>
+        <table class="status-table">
+            <tr>
+                <th>Funcionalidade</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Login/Logout (Superusuário: admin/SENHA_REMOVIDA)</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Cadastro de Clientes</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Cadastro de Técnicos</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Cadastro de Equipamentos</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Ordens de Serviço (Reparos)</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Dashboard (Gráficos Chart.js)</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Laudo em PDF (ReportLab)</td>
+                <td class="status-ok">✅ Funcional</td>
+            </tr>
+            <tr>
+                <td>Conexão Supabase (PostgreSQL)</td>
+                <td class="status-ok">✅ Funcional (Pooler IPv4)</td>
+            </tr>
+        </table>
+
+        <h2>12. Considerações Finais</h2>
+        <p>O projeto SGO está <strong>totalmente funcional</strong> com PostgreSQL/Supabase e <strong>deployado no Vercel</strong>. Todas as operações CRUD, autenticação, dashboard e geração de PDF foram testadas com sucesso no ambiente de produção.</p>
+        
+        <h3>Tecnologias Utilizadas:</h3>
+        <ul>
+            <li><strong>Backend:</strong> Django 6.0.5, Python 3.12</li>
+            <li><strong>Banco:</strong> PostgreSQL (Supabase, sa-east-1)</li>
+            <li><strong>Frontend:</strong> HTML5, CSS3, Bootstrap 5, JavaScript (Chart.js)</li>
+            <li><strong>Deploy:</strong> Vercel (Serverless Python)</li>
+            <li><strong>PDF:</strong> ReportLab</li>
+        </ul>
+
+        <h3>Histórico de Versões:</h3>
+        <ol>
+            <li>✅ v1.0: Relatórios iniciais, configuração PostgreSQL via variáveis</li>
+            <li>✅ v1.1: Migração PostgreSQL/Supabase concluída, sistema funcional no localhost</li>
+            <li>✅ v1.2: Deploy no Vercel realizado, sistema online com Pooler (IPv4)</li>
+        </ol>
+
+        <div class="footer">
+            <p><em>Relatório final atualizado em 07/05/2026 — Versão v1.2 (Deploy Vercel Concluído).</em></p>
+            <p>SGO — Sistema de Gestão de Oficina | PJI310-A2026S1N2-GRUPO20</p>
+            <p><strong>URL de Produção:</strong> <a href="https://sgo-pji.vercel.app">https://sgo-pji.vercel.app</a></p>
+        </div>
+    </div>
+</body>
+</html>
